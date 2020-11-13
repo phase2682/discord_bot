@@ -80,6 +80,9 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    '''
+    allows us to view and process every message the bot can see
+    '''
     if message.author == bot.user:
         return
 
@@ -98,21 +101,25 @@ async def on_message(message):
             f'message.content: {message.content}'
         )
 
+    # the new versions of discord.py require this to
+    # be able to run normal commands in addition to
+    # viewing all messsages
     await bot.process_commands(message)
 
+
 def load_file(filename):
-    house_quotes_file = os.path.join(
+    filepath = os.path.join(
         os.path.dirname(__file__),
         'info',
         filename
     )
-    house_quotes = list()
-    with open(house_quotes_file, 'r') as fr:
+    lines = list()
+    with open(filepath, 'r') as fr:
         for line in fr:
             line = line.strip()
             if line:
-                house_quotes.append(line)
-    return house_quotes
+                lines.append(line)
+    return lines
 
 
 def load_bad_words_re():
@@ -225,16 +232,6 @@ class Admin(commands.Cog):
         # REMOVE
         await ctx.send(f'done debugging')
 
-    @commands.command()
-    async def channels(self, ctx):
-        'send a message in a given channel'
-        if not await authorized(ctx):
-            return
-        for c in ctx.guild.channels:
-            print(dir(c))
-            break
-        await ctx.send(' '.join(message))
-
     @commands.command(aliases=['mc'])
     async def message_channel(self, ctx, channel_id, *message):
         'send a message in a given channel'
@@ -254,7 +251,7 @@ class Admin(commands.Cog):
         random.shuffle(bad_words)
         await ctx.send(' '.join(bad_words))
 
-    @commands.command()
+    @commands.command(aliases=['rs'])
     async def restart(self, ctx):
         'restart the bot'
         if not await authorized(ctx):
@@ -263,12 +260,21 @@ class Admin(commands.Cog):
         await ctx.send('restarting...')
         os.system('./bot.py')
 
-    @commands.command()
+    @commands.command(aliases=['off'])
     async def offline(self, ctx):
         if not await authorized(ctx):
             return
 
         await bot.change_presence(status=Status.offline)
+        await ctx.send('status set to offline')
+
+    @commands.command(aliases=['on'])
+    async def online(self, ctx):
+        if not await authorized(ctx):
+            return
+
+        await bot.change_presence(status=Status.online)
+        await ctx.send('status set to online')
 
     @commands.command()
     async def todo(self, ctx, *new_todo):
